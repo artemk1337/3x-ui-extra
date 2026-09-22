@@ -186,6 +186,7 @@ func (a *APIController) initRouter(g *gin.RouterGroup) {
 	clients := api.Group("/clients")
 	NewClientController(clients)
 	NewGroupController(clients)
+	NewVKTurnController(api.Group("/vkturn"))
 
 	// Server API
 	server := api.Group("/server")

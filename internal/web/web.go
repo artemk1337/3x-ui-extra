@@ -300,6 +300,7 @@ const (
 	cadenceMtproto       = "@every 10s"
 	cadenceAmneziaWG     = "@every 10s"
 	cadenceTuic          = "@every 10s"
+	cadenceVKTurn        = "@every 10s"
 	cadenceClientIPScan  = "@every 10s"
 	cadenceNodeHeartbeat = "@every 5s"
 	cadenceNodeTraffic   = "@every 5s"
@@ -349,6 +350,14 @@ func (s *Server) startTask(restartXray bool, loc *time.Location) {
 	tuicJob := job.NewTuicJob()
 	_, _ = s.cron.AddJob(cadenceTuic, tuicJob)
 	go tuicJob.Run()
+	_, _ = s.cron.AddFunc(cadenceVKTurn, func() {
+		_ = service.ReconcileVKAssignments()
+		_ = service.ReconcileVKProxyProcesses()
+	})
+	go func() {
+		_ = service.ReconcileVKAssignments()
+		_ = service.ReconcileVKProxyProcesses()
+	}()
 
 	// check client ips from log file every 10 sec
 	_, _ = s.cron.AddJob(cadenceClientIPScan, job.NewCheckClientIpJob())
@@ -796,6 +805,7 @@ func (s *Server) stop(stopXray bool, stopTgBot bool) error {
 		mtproto.GetManager().StopAll()
 		amneziawgnet.GetManager().StopAll()
 		tuic.GetManager().StopAll()
+		service.StopVKProxyProcesses()
 		amneziawgnet.GetOutboundManager().StopAll()
 	}
 	if s.cron != nil {

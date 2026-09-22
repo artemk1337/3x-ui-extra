@@ -112,6 +112,7 @@
     "dashboard": "Дашборд",
     "inbounds": "Входящие",
     "clients": "Клиенты",
+    "vkTurn": "VK TURN",
     "groups": "Группы",
     "nodes": "Узлы",
     "settings": "Настройки панели",
@@ -128,6 +129,29 @@
     "subFormats": "Форматы подписки"
   },
   "pages": {
+    "vkTurn": {
+      "addCall": "Добавить звонок",
+      "editCall": "Изменить звонок",
+      "deleteCall": "Удалить звонок?",
+      "callUrl": "Ссылка на ВК звонок",
+      "enabled": "Включено",
+      "configs": "Конфигурации",
+      "limit": "Лимит конфигураций",
+      "unlimitedHint": "Пусто — без лимита",
+      "invalidUrl": "Введите ссылку на ВК звонок",
+      "actions": "Действия",
+      "proxies": "Прокси WireGuard",
+      "inbound": "Входящее подключение",
+      "udpPort": "Публичный UDP-порт",
+      "status": "Состояние",
+      "assignments": "Назначения звонков",
+      "client": "Клиент",
+      "waiting": "Ожидает звонок",
+      "loadFailed": "Не удалось загрузить данные VK TURN",
+      "clientEnabled": "Использовать VK TURN",
+      "clientEnabledHint": "Назначить этой конфигурации WireGuard ВК звонок",
+      "clientSavedOptInFailed": "Клиент сохранён, но VK TURN не удалось включить для всех WireGuard-конфигураций. Откройте клиента снова и повторите попытку."
+    },
     "login": {
       "hello": "Привет!",
       "title": "Добро пожаловать!",

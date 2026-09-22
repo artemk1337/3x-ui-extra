@@ -48,6 +48,8 @@ services:
     ports:
       # When XUI_PORT is set, publish the same container port (for example "8080:8080").
       - "2053:2053"
+      # Publish each enabled VK TURN proxy UDP port, matching its panel setting.
+      # - "56000:56000/udp"
     restart: unless-stopped
 
   postgres:

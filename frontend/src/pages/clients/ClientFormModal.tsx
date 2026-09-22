@@ -280,6 +280,9 @@ export default function ClientFormModal({
   } = useFieldArray({ control: methods.control, name: 'externalLinks' });
 
   const [submitting, setSubmitting] = useState(false);
+  const [vkTurnByInbound, setVkTurnByInbound] = useState<Record<number, boolean>>({});
+  const [initialVkTurnByInbound, setInitialVkTurnByInbound] = useState<Record<number, boolean>>({});
+  const [vkTurnLoading, setVkTurnLoading] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [clientIps, setClientIps] = useState<ClientIpInfo[]>([]);
   const [ipsLoading, setIpsLoading] = useState(false);
@@ -314,6 +317,48 @@ export default function ClientFormModal({
     }
     return ids;
   }, [inbounds]);
+
+  const vkTurnInboundIds = useMemo(
+    () =>
+      new Set(
+        inbounds
+          .filter((row) => row.protocol === 'wireguard' && row.nodeId == null)
+          .map((row) => row.id),
+      ),
+    [inbounds],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    setVkTurnByInbound({});
+    setInitialVkTurnByInbound({});
+    setVkTurnLoading(false);
+    if (!isEdit || !client?.email) return;
+    let cancelled = false;
+    setVkTurnLoading(true);
+    void HttpUtil.get<Array<{ inboundId: number; email: string; enabled: boolean }>>(
+      '/panel/api/vkturn/assignments',
+      undefined,
+      { silent: true },
+    ).then((msg) => {
+      if (cancelled) return;
+      if (msg.success && Array.isArray(msg.obj)) {
+        const selected = Object.fromEntries(
+          msg.obj
+            .filter((row) => row.email === client.email && vkTurnInboundIds.has(row.inboundId))
+            .map((row) => [row.inboundId, row.enabled]),
+        );
+        setVkTurnByInbound(selected);
+        setInitialVkTurnByInbound(selected);
+      } else {
+        messageApi.error(msg.msg || t('pages.vkTurn.loadFailed'));
+      }
+      setVkTurnLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, isEdit, client?.email, vkTurnInboundIds, messageApi, t]);
 
   const amneziawgIds = useMemo(() => {
     const ids = new Set<number>();
@@ -791,7 +836,25 @@ export default function ClientFormModal({
           { isEdit: false, email: clientPayload.email as string, externalLinks },
         );
       }
-      if (msg?.success) close();
+      if (msg?.success) {
+        const selectedIds = (values.inboundIds || []).filter((id) => vkTurnInboundIds.has(id));
+        const configs = selectedIds
+          .filter((inboundId) => !!vkTurnByInbound[inboundId] !== !!initialVkTurnByInbound[inboundId])
+          .map((inboundId) => ({ inboundId, enabled: !!vkTurnByInbound[inboundId] }));
+        if (configs.length > 0) {
+          const turnMsg = await HttpUtil.put(
+            `/panel/api/vkturn/batch-configs/${encodeURIComponent(values.email.trim())}`,
+            { configs },
+            { headers: { 'Content-Type': 'application/json' } },
+          );
+          if (!turnMsg.success) {
+            messageApi.warning(t('pages.vkTurn.clientSavedOptInFailed'));
+            close();
+            return;
+          }
+        }
+        close();
+      }
     } finally {
       setSubmitting(false);
     }
@@ -1317,6 +1380,39 @@ export default function ClientFormModal({
                           >
                             <InputNumber min={0} max={65535} style={{ width: '100%' }} />
                           </FormField>
+                          {showWireguard &&
+                            (inboundIds || []).some((id) => vkTurnInboundIds.has(id)) && (
+                              <Form.Item
+                                label={t('pages.vkTurn.clientEnabled')}
+                                extra={t('pages.vkTurn.clientEnabledHint')}
+                              >
+                                <Space direction="vertical">
+                                  {(inboundIds || [])
+                                    .filter((id) => vkTurnInboundIds.has(id))
+                                    .map((id) => {
+                                      const inbound = inbounds.find((row) => row.id === id);
+                                      return (
+                                        <Space key={id}>
+                                          <Switch
+                                            checked={!!vkTurnByInbound[id]}
+                                            loading={vkTurnLoading}
+                                            disabled={vkTurnLoading}
+                                            onChange={(enabled) =>
+                                              setVkTurnByInbound((prev) => ({
+                                                ...prev,
+                                                [id]: enabled,
+                                              }))
+                                            }
+                                          />
+                                          <span>
+                                            {formatInboundLabel(inbound?.tag, inbound?.remark)}
+                                          </span>
+                                        </Space>
+                                      );
+                                    })}
+                                </Space>
+                              </Form.Item>
+                            )}
                           {showAmneziawg && (
                             <FormField
                               name="awgForwardedPorts"

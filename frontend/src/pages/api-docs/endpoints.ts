@@ -2716,6 +2716,73 @@ export const sections: readonly Section[] = [
   },
 
   {
+    id: 'vk-turn',
+    title: 'VK TURN',
+    description:
+      'Manage VK call capacity, per-WireGuard-client assignments and local TURN proxy processes. Admin access is required.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/vkturn/calls',
+        summary: 'List calls with assigned configuration counts and over-limit counts.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/vkturn/calls',
+        summary: 'Create a VK call. maxConfigs=0 means unlimited.',
+        body: '{"url":"https://vk.com/call/join/abc","enabled":true,"maxConfigs":10}',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/vkturn/calls/:id',
+        summary: 'Replace a call URL, enabled state and capacity limit.',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+        body: '{"url":"https://vk.com/call/join/abc","enabled":true,"maxConfigs":10}',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/vkturn/calls/:id',
+        summary: 'Delete a call and reassign its configurations.',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/vkturn/assignments',
+        summary: 'List opted-in WireGuard configurations and their assigned call IDs.',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/vkturn/batch-configs/:email',
+        summary: 'Atomically enable or disable VK TURN for several local WireGuard inbounds of one client.',
+        params: [{ name: 'email', in: 'path', type: 'string' }],
+        body: '{"configs":[{"inboundId":1,"enabled":true},{"inboundId":2,"enabled":false}]}',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/vkturn/configs/:inboundId/:email',
+        summary: 'Enable or disable VK TURN for one local WireGuard client.',
+        params: [
+          { name: 'inboundId', in: 'path', type: 'integer' },
+          { name: 'email', in: 'path', type: 'string' },
+        ],
+        body: '{"enabled":true}',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/vkturn/proxies',
+        summary: 'List configured proxy listeners and process status.',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/vkturn/proxies/:inboundId',
+        summary: 'Configure one proxy listener for a local WireGuard inbound.',
+        params: [{ name: 'inboundId', in: 'path', type: 'integer' }],
+        body: '{"listenPort":56000,"enabled":true}',
+      },
+    ],
+  },
+
+  {
     id: 'websocket',
     title: 'WebSocket',
     description:

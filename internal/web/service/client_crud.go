@@ -797,9 +797,17 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 		return needRestart, err
 	}
 
-	if err := database.GetDB().Model(&model.ClientRecord{}).
-		Where("id = ?", id).
-		UpdateColumn("enable", updated.Enable).Error; err != nil {
+	if err := runSerializedTx(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.ClientRecord{}).
+			Where("id = ?", id).
+			UpdateColumn("enable", updated.Enable).Error; err != nil {
+			return err
+		}
+		if tx.Migrator().HasTable(&model.VKConfig{}) {
+			return reconcileVKAssignmentsTx(tx)
+		}
+		return nil
+	}); err != nil {
 		return needRestart, err
 	}
 

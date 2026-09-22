@@ -112,6 +112,7 @@
     "dashboard": "Overview",
     "inbounds": "Inbounds",
     "clients": "Clients",
+    "vkTurn": "VK TURN",
     "groups": "Groups",
     "nodes": "Nodes",
     "hosts": "Hosts",
@@ -128,6 +129,29 @@
     "subFormats": "Sub Formats"
   },
   "pages": {
+    "vkTurn": {
+      "addCall": "Add call",
+      "editCall": "Edit call",
+      "deleteCall": "Delete call?",
+      "callUrl": "VK call link",
+      "enabled": "Enabled",
+      "configs": "Configurations",
+      "limit": "Configuration limit",
+      "unlimitedHint": "Leave empty for no limit",
+      "invalidUrl": "Enter a VK call link",
+      "actions": "Actions",
+      "proxies": "WireGuard proxies",
+      "inbound": "Inbound",
+      "udpPort": "Public UDP port",
+      "status": "Status",
+      "assignments": "Call assignments",
+      "client": "Client",
+      "waiting": "Waiting for a call",
+      "loadFailed": "Failed to load VK TURN data",
+      "clientEnabled": "Use VK TURN",
+      "clientEnabledHint": "Assign this WireGuard configuration to a VK call",
+      "clientSavedOptInFailed": "Client was saved, but VK TURN could not be enabled for every WireGuard inbound. Reopen the client and retry."
+    },
     "login": {
       "hello": "Hello",
       "title": "Welcome",

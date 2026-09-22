@@ -1005,6 +1005,37 @@ type ClientInbound struct {
 
 func (ClientInbound) TableName() string { return "client_inbounds" }
 
+// VKCall is a reusable VK call URL shared by multiple WireGuard configurations.
+// MaxConfigs=0 means there is no configured capacity limit.
+type VKCall struct {
+	Id         int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	URL        string `json:"url" gorm:"uniqueIndex;not null"`
+	Enable     bool   `json:"enabled" gorm:"column:enable"`
+	MaxConfigs int    `json:"maxConfigs" gorm:"column:max_configs"`
+	CreatedAt  int64  `json:"createdAt" gorm:"autoCreateTime:milli"`
+}
+
+func (VKCall) TableName() string { return "vk_calls" }
+
+// VKConfig opts one WireGuard client into VK TURN on one inbound.
+type VKConfig struct {
+	InboundId int  `json:"inboundId" gorm:"primaryKey;column:inbound_id"`
+	ClientId  int  `json:"clientId" gorm:"primaryKey;column:client_id"`
+	Enable    bool `json:"enabled" gorm:"column:enable"`
+	CallId    *int `json:"callId" gorm:"column:call_id;index"`
+}
+
+func (VKConfig) TableName() string { return "vk_configs" }
+
+// VKProxy binds a local WireGuard inbound to one public TURN proxy listener.
+type VKProxy struct {
+	InboundId  int  `json:"inboundId" gorm:"primaryKey;column:inbound_id"`
+	ListenPort int  `json:"listenPort" gorm:"column:listen_port"`
+	Enable     bool `json:"enabled" gorm:"column:enable"`
+}
+
+func (VKProxy) TableName() string { return "vk_proxies" }
+
 type ClientHwid struct {
 	Id          int    `json:"id" gorm:"primaryKey;autoIncrement"`
 	SubID       string `json:"subId" gorm:"column:sub_id;not null;index;uniqueIndex:idx_client_hwids_sub_hash,priority:1"`
