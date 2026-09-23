@@ -77,10 +77,10 @@
 bash <(curl -Ls https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/install.sh)
 ```
 
-Чтобы установить конкретную версию, добавьте её тег (например, `v3.7.0`):
+Чтобы установить конкретную версию, добавьте её тег (например, `v3.8.7`):
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/install.sh) v3.8.6
+bash <(curl -Ls https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/install.sh) v3.8.7
 ```
 
 Чтобы установить скользящую **dev**-сборку (новейший предварительный релиз по каждому коммиту из ветки `main`, а не стабильный релиз), передайте `dev-latest`:

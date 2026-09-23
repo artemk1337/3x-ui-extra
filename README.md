@@ -77,10 +77,10 @@ Built as an enhanced fork of the original X-UI project, 3X-UI adds broader proto
 bash <(curl -Ls https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/install.sh)
 ```
 
-To install a specific version, append its tag (e.g. `v3.7.0`):
+To install a specific version, append its tag (e.g. `v3.8.7`):
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/install.sh) v3.8.6
+bash <(curl -Ls https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/install.sh) v3.8.7
 ```
 
 To install the rolling **dev** build (latest per-commit pre-release from `main`, not a stable release), pass `dev-latest`:
