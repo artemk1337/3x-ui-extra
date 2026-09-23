@@ -1,5 +1,19 @@
 # Cloud deployment (unattended install)
 
+## Install this fork on a VPS
+
+The installer and the `x-ui` update menu use releases from
+`artemk1337/3x-ui-extra`:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/install.sh)
+```
+
+Pass a release tag as an argument to pin a version. A `v*.*.*` tag starts the
+release workflow; it publishes verified Linux archives and a Windows archive as
+a stable GitHub release. Pushing to `main` updates the `dev-latest` prerelease.
+The no-argument installer resolves the latest stable release.
+
 Tooling to ship the 3x-ui panel via unattended install, with **per-instance
 credentials generated on first boot** (never `admin/admin`, never a shared
 session secret). Works on amd64 and arm64.
