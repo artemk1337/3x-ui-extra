@@ -11,6 +11,7 @@ on:
       - "**.go"
       - "go.mod"
       - "go.sum"
+      - "internal/config/version"
       - "**.sh"
       - "frontend/**"
       - "x-ui.service.debian"
@@ -22,6 +23,7 @@ on:
       - "**.go"
       - "go.mod"
       - "go.sum"
+      - "internal/config/version"
       - "**.sh"
       - "frontend/**"
       - "x-ui.service.debian"
@@ -415,6 +417,19 @@ jobs:
         with:
           path: dev-artifacts
           merge-multiple: true
+
+      - name: Verify dev assets
+        run: |
+          set -euo pipefail
+          cd dev-artifacts
+          for platform in amd64 arm64 armv7 armv6 386 armv5 s390x; do
+            test -s "x-ui-linux-${platform}.tar.gz"
+            test -s "x-ui-linux-${platform}.tar.gz.sha256"
+            sha256sum -c "x-ui-linux-${platform}.tar.gz.sha256"
+          done
+          test -s x-ui-windows-amd64.zip
+          test -s x-ui-windows-amd64.zip.sha256
+          sha256sum -c x-ui-windows-amd64.zip.sha256
 
       - name: Publish dev-latest pre-release
         env:
