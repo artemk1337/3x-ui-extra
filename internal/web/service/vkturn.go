@@ -48,14 +48,14 @@ type VKConfigInput struct {
 func normalizeVKCallURL(raw string) (string, error) {
 	raw = strings.TrimSpace(raw)
 	u, err := url.Parse(raw)
-	if err != nil || u.Scheme != "https" || !strings.EqualFold(u.Hostname(), "vk.com") || u.Port() != "" || u.User != nil || u.Fragment != "" {
-		return "", errors.New("expected an https://vk.com/call/join/... URL")
+	if err != nil || u.Scheme != "https" || (u.Hostname() != "vk.com" && u.Hostname() != "vk.ru") || u.Port() != "" || u.User != nil || u.Fragment != "" {
+		return "", errors.New("expected an https://vk.ru/call/join/... or https://vk.com/call/join/... URL")
 	}
 	parts := strings.Split(strings.Trim(u.EscapedPath(), "/"), "/")
 	if len(parts) != 3 || parts[0] != "call" || parts[1] != "join" || parts[2] == "" {
-		return "", errors.New("expected an https://vk.com/call/join/... URL")
+		return "", errors.New("expected an https://vk.ru/call/join/... or https://vk.com/call/join/... URL")
 	}
-	u.Host = "vk.com"
+	u.Host = strings.ToLower(u.Hostname())
 	return u.String(), nil
 }
 

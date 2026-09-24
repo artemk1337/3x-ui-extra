@@ -189,7 +189,12 @@ func TestVKTurnClientEditorReconcilesEnableImmediately(t *testing.T) {
 }
 
 func TestVKTurnCallURLValidation(t *testing.T) {
-	for _, raw := range []string{"http://vk.com/call/join/x", "https://evil.com/call/join/x", "https://vk.com/call/join", "https://vk.com/call/join/x#fragment"} {
+	for _, raw := range []string{"https://vk.ru/call/join/nTXUy1A30B0UbEWV8KXoEQYzzms2ly358f5oG", "https://vk.com/call/join/x"} {
+		if got, err := normalizeVKCallURL(raw); err != nil || got != raw {
+			t.Errorf("normalizeVKCallURL(%q) = %q, %v", raw, got, err)
+		}
+	}
+	for _, raw := range []string{"http://vk.ru/call/join/x", "https://evil.com/call/join/x", "https://vk.ru/call/join", "https://vk.com/call/join/x#fragment"} {
 		if _, err := normalizeVKCallURL(raw); err == nil {
 			t.Errorf("accepted %q", raw)
 		}

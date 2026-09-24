@@ -7,7 +7,8 @@ VK call links itself: clients use a call link to obtain a TURN relay.
 
 1. Create and enable a **local** WireGuard inbound with its clients in the
    panel. Give the inbound a UDP port.
-2. In **VK TURN**, add one or more `https://vk.com/call/join/...` links. Each
+2. In **VK TURN**, add one or more `https://vk.ru/call/join/...` or
+   `https://vk.com/call/join/...` links. Each
    link can have a maximum number of active configurations; zero means no
    limit. Enable VK TURN for the desired WireGuard clients in their client
    editor. One client attached to two WireGuard inbounds counts as two

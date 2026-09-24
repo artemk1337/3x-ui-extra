@@ -399,7 +399,7 @@ export default function VkTurnPage() {
             rules={[
               { required: true },
               {
-                pattern: /^https:\/\/vk\.com\/call\/join\/[^\s/?#]+\/?(?:\?[^\s#]*)?$/,
+                pattern: /^https:\/\/vk\.(?:com|ru)\/call\/join\/[^\s/?#]+\/?(?:\?[^\s#]*)?$/,
                 message: t('pages.vkTurn.invalidUrl'),
               },
             ]}
