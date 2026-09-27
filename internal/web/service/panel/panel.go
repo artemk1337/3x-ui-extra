@@ -40,7 +40,8 @@ type PanelUpdateInfo struct {
 }
 
 const (
-	panelUpdaterURL      = "https://raw.githubusercontent.com/MHSanaei/3x-ui/main/update.sh"
+	panelRepository      = "artemk1337/3x-ui-extra"
+	panelUpdaterURL      = "https://raw.githubusercontent.com/" + panelRepository + "/main/update.sh"
 	maxPanelUpdaterBytes = 2 << 20
 	// devReleaseTag is the fixed-tag rolling pre-release the CI force-moves to the
 	// newest main commit; the dev update channel installs from it.
@@ -430,10 +431,7 @@ func fetchLatestPanelVersion() (string, error) {
 // fetchPanelRelease fetches a release from GitHub. An empty tag resolves the
 // latest stable release; a non-empty tag (e.g. dev-latest) resolves that tag.
 func fetchPanelRelease(tag string) (*service.Release, error) {
-	url := "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest"
-	if tag != "" {
-		url = "https://api.github.com/repos/MHSanaei/3x-ui/releases/tags/" + tag
-	}
+	url := panelReleaseURL(tag)
 	client := (&service.SettingService{}).NewProxiedHTTPClient(10 * time.Second)
 	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if reqErr != nil {
@@ -453,6 +451,14 @@ func fetchPanelRelease(tag string) (*service.Release, error) {
 		return nil, err
 	}
 	return &release, nil
+}
+
+func panelReleaseURL(tag string) string {
+	base := "https://api.github.com/repos/" + panelRepository + "/releases"
+	if tag != "" {
+		return base + "/tags/" + tag
+	}
+	return base + "/latest"
 }
 
 // extractReleaseCommit reads the build commit recorded in the dev release: first

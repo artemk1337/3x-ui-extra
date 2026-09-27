@@ -89,6 +89,9 @@ func (t *Tgbot) OnReceive() {
 
 		h.HandleMessage(func(ctx *th.Context, message telego.Message) error {
 			defer recoverBotPanic()
+			if message.From == nil {
+				return nil
+			}
 			if !t.isCommandForCurrentBot(&message) {
 				return nil
 			}
@@ -222,11 +225,30 @@ func (t *Tgbot) answerCommand(message *telego.Message, chatId int64, isAdmin boo
 		msg += t.I18nBot("tgbot.commands.help")
 		msg += t.I18nBot("tgbot.commands.pleaseChoose")
 	case "start":
+		if len(commandArgs) == 1 {
+			if code, ok := strings.CutPrefix(commandArgs[0], "login_"); ok {
+				onlyMessage = true
+				msg = t.telegramAuthCommand(message, "login", code)
+				break
+			}
+			if code, ok := strings.CutPrefix(commandArgs[0], "link_"); ok {
+				onlyMessage = true
+				msg = t.telegramAuthCommand(message, "link", code)
+				break
+			}
+		}
 		msg += t.I18nBot("tgbot.commands.start", "Firstname=="+html.EscapeString(message.From.FirstName))
 		if isAdmin {
 			msg += t.I18nBot("tgbot.commands.welcome", "Hostname=="+hostname)
 		}
 		msg += "\n\n" + t.I18nBot("tgbot.commands.pleaseChoose")
+	case "login", "link":
+		onlyMessage = true
+		if len(commandArgs) != 1 {
+			msg = t.I18nBot("tgbot.authUsage", "Command=="+command)
+		} else {
+			msg = t.telegramAuthCommand(message, command, commandArgs[0])
+		}
 	case "status":
 		onlyMessage = true
 		msg += t.I18nBot("tgbot.commands.status")
@@ -301,6 +323,8 @@ func (t *Tgbot) isCommandForCurrentBot(message *telego.Message) bool {
 }
 
 func botUsername() string {
+	tgBotMutex.Lock()
+	defer tgBotMutex.Unlock()
 	if bot == nil {
 		return ""
 	}

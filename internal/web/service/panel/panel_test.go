@@ -33,6 +33,18 @@ func TestIsNewerVersion(t *testing.T) {
 	}
 }
 
+func TestPanelUpdateSourcesUseFork(t *testing.T) {
+	if got, want := panelReleaseURL(""), "https://api.github.com/repos/artemk1337/3x-ui-extra/releases/latest"; got != want {
+		t.Fatalf("stable release URL = %q, want %q", got, want)
+	}
+	if got, want := panelReleaseURL(devReleaseTag), "https://api.github.com/repos/artemk1337/3x-ui-extra/releases/tags/dev-latest"; got != want {
+		t.Fatalf("dev release URL = %q, want %q", got, want)
+	}
+	if got, want := panelUpdaterURL, "https://raw.githubusercontent.com/artemk1337/3x-ui-extra/main/update.sh"; got != want {
+		t.Fatalf("updater URL = %q, want %q", got, want)
+	}
+}
+
 func TestCompareVersionStringsRejectsUnexpectedFormats(t *testing.T) {
 	if _, ok := compareVersionStrings("latest", "2.9.3"); ok {
 		t.Fatal("expected non-semver latest tag to be rejected")

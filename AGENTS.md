@@ -4,6 +4,9 @@
   tables in both `internal/database/db.go` and `internal/database/migrate_data.go`.
 - `internal/web/service` owns panel mutations; `internal/web/controller` exposes
   authenticated APIs. `frontend` is the React admin panel.
+- Telegram panel login uses a personal user ID linked with current credentials,
+  not the bot's notification/admin chat list. One-time bot approvals issue the
+  ordinary panel session; password login remains available.
 - `internal/vkturnproxy` owns only local proxy child processes. The VK TURN
   service stores call capacity and per-(WireGuard inbound, client) assignments.
   Xray remains the WireGuard server; a call URL is client-side TURN metadata,

@@ -30,11 +30,14 @@ engine does not serve.
 */
 
 var contractExtraRoutes = map[string]bool{
-	"POST /login":              true,
-	"POST /logout":             true,
-	"GET /csrf-token":          true,
-	"POST /getTwoFactorEnable": true,
-	"GET /ws":                  true,
+	"POST /login":                  true,
+	"POST /logout":                 true,
+	"GET /csrf-token":              true,
+	"POST /getTwoFactorEnable":     true,
+	"GET /telegram-auth/status":    true,
+	"POST /telegram-auth/start":    true,
+	"POST /telegram-auth/complete": true,
+	"GET /ws":                      true,
 }
 
 func inContractScope(method, path string) bool {
