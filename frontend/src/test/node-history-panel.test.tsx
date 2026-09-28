@@ -44,11 +44,13 @@ describe('NodeHistoryPanel', () => {
       '512',
       '200',
     ]);
-    expect(plots.map((p) => p.scales.y.range())).toEqual([
-      [0, 100],
-      [0, 100],
-      [0, 512 * 1.1],
-      [0, 200 * 1.1],
-    ]);
+    await waitFor(() =>
+      expect(plots.map((p) => p.scales.y.range())).toEqual([
+        [0, 100],
+        [0, 100],
+        [0, 512 * 1.1],
+        [0, 200 * 1.1],
+      ]),
+    );
   });
 });
