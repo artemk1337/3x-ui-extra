@@ -1645,9 +1645,6 @@ func (s *ClientService) BulkSetEnable(inboundSvc *InboundService, emails []strin
 					return e
 				}
 			}
-			if tx.Migrator().HasTable(&model.VKConfig{}) {
-				return reconcileVKAssignmentsTx(tx)
-			}
 			return nil
 		}); err != nil {
 			return result, needRestart, err

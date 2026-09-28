@@ -211,13 +211,7 @@ func (s *ClientService) syncInboundClients(tx *gorm.DB, inboundId int, clients [
 		wantedIds = append(wantedIds, id)
 	}
 
-	if err := s.reconcileInboundLinks(tx, inboundId, wantedFlow, wantedIds, detachEmails, prune); err != nil {
-		return err
-	}
-	if tx.Migrator().HasTable(&model.VKConfig{}) {
-		return reconcileVKAssignmentsTx(tx)
-	}
-	return nil
+	return s.reconcileInboundLinks(tx, inboundId, wantedFlow, wantedIds, detachEmails, prune)
 }
 
 // reconcileInboundLinks writes only the client_inbounds rows that differ. prune
@@ -314,19 +308,7 @@ func (s *ClientService) DetachInbound(tx *gorm.DB, inboundId int) error {
 	if tx == nil {
 		tx = database.GetDB()
 	}
-	if err := tx.Where("inbound_id = ?", inboundId).Delete(&model.ClientInbound{}).Error; err != nil {
-		return err
-	}
-	if tx.Migrator().HasTable(&model.VKConfig{}) {
-		if err := tx.Where("inbound_id = ?", inboundId).Delete(&model.VKConfig{}).Error; err != nil {
-			return err
-		}
-		if err := tx.Where("inbound_id = ?", inboundId).Delete(&model.VKProxy{}).Error; err != nil {
-			return err
-		}
-		return reconcileVKAssignmentsTx(tx)
-	}
-	return nil
+	return tx.Where("inbound_id = ?", inboundId).Delete(&model.ClientInbound{}).Error
 }
 
 func (s *ClientService) ListForInbound(tx *gorm.DB, inboundId int) ([]model.Client, error) {

@@ -70,8 +70,7 @@ type IconName =
   | 'logout'
   | 'apidocs'
   | 'outbound'
-  | 'routing'
-  | 'vkturn';
+  | 'routing';
 
 const iconByName: Record<IconName, ComponentType> = {
   dashboard: DashboardOutlined,
@@ -86,7 +85,6 @@ const iconByName: Record<IconName, ComponentType> = {
   apidocs: ApiOutlined,
   outbound: ExportOutlined,
   routing: SwapOutlined,
-  vkturn: ApiOutlined,
 };
 
 function DonateButton({ ariaLabel }: { ariaLabel: string }) {
@@ -226,7 +224,6 @@ export default function AppSidebar() {
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
       { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
       { key: '/clients', icon: 'team', title: t('menu.clients') },
-      { key: '/vk-turn', icon: 'vkturn', title: t('menu.vkTurn') },
       { key: '/groups', icon: 'groups', title: t('menu.groups') },
       { key: '/nodes', icon: 'cluster', title: t('menu.nodes') },
       { key: '/hosts', icon: 'hosts', title: t('menu.hosts') },

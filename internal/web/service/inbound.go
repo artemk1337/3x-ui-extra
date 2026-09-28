@@ -1419,7 +1419,7 @@ func (s *InboundService) delInbound(id int) (bool, func(), error) {
 		logger.Debug("DelInbound: inbound not found, id:", id)
 	}
 
-	if err := runSerializedTx(func(tx *gorm.DB) error {
+	if err := db.Transaction(func(tx *gorm.DB) error {
 		if err := s.clientService.DetachInbound(tx, id); err != nil {
 			return err
 		}
@@ -1613,15 +1613,10 @@ func (s *InboundService) SetInboundEnable(id int, enable bool) (bool, error) {
 			return false, common.NewError(conflict.String())
 		}
 	}
-	if err := runSerializedTx(func(tx *gorm.DB) error {
+	if err := db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Model(model.Inbound{}).Where("id = ?", id).
 			Update("enable", enable).Error; err != nil {
 			return err
-		}
-		if tx.Migrator().HasTable(&model.VKConfig{}) {
-			if err := reconcileVKAssignmentsTx(tx); err != nil {
-				return err
-			}
 		}
 		if inbound.NodeID != nil {
 			return (&NodeService{}).MarkNodeDirtyTx(tx, *inbound.NodeID)
@@ -1631,7 +1626,6 @@ func (s *InboundService) SetInboundEnable(id int, enable bool) (bool, error) {
 		return false, err
 	}
 	inbound.Enable = enable
-	_ = ReconcileVKProxyProcesses()
 
 	needRestart := false
 	rt, push, _, perr := s.nodePushPlan(inbound)

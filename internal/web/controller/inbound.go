@@ -176,7 +176,6 @@ func (a *InboundController) addInbound(c *gin.Context) {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}
-	_ = service.ReconcileVKProxyProcesses()
 	jsonMsgObj(c, I18nWeb(c, "pages.inbounds.toasts.inboundCreateSuccess"), inbound, nil)
 	if needRestart {
 		a.xrayService.SetToNeedRestart()
@@ -197,7 +196,6 @@ func (a *InboundController) delInbound(c *gin.Context) {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}
-	_ = service.ReconcileVKProxyProcesses()
 	jsonMsgObj(c, I18nWeb(c, "pages.inbounds.toasts.inboundDeleteSuccess"), id, nil)
 	if needRestart {
 		a.xrayService.SetToNeedRestart()
@@ -224,7 +222,6 @@ func (a *InboundController) bulkDelInbounds(c *gin.Context) {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}
-	_ = service.ReconcileVKProxyProcesses()
 	jsonObj(c, result, nil)
 	if needRestart {
 		a.xrayService.SetToNeedRestart()
@@ -259,7 +256,6 @@ func (a *InboundController) updateInbound(c *gin.Context) {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}
-	_ = service.ReconcileVKProxyProcesses()
 	jsonMsgObj(c, I18nWeb(c, "pages.inbounds.toasts.inboundUpdateSuccess"), inbound, nil)
 	if needRestart {
 		a.xrayService.SetToNeedRestart()
