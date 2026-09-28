@@ -8,14 +8,16 @@ import (
 	"sync"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
-	"gorm.io/gorm"
 )
 
 const (
-	codeTTL    = 5 * time.Minute
-	maxPending = 1024
+	codeTTL          = 5 * time.Minute
+	maxPendingLinks  = 1024
+	maxPendingLogins = 1024
 )
 
 var (
@@ -33,6 +35,7 @@ type linkRequest struct {
 
 type loginRequest struct {
 	csrf       string
+	ip         string
 	expiresAt  time.Time
 	userID     int
 	telegramID int64
@@ -64,17 +67,18 @@ func (s *Service) StartLink(userID int) (string, time.Time, error) {
 	if userID <= 0 || s.db().First(&user, userID).Error != nil || user.TelegramID != 0 {
 		return "", time.Time{}, ErrUnavailable
 	}
-	if !s.reserve() {
-		return "", time.Time{}, ErrTooMany
-	}
 	code, err := newCode()
 	if err != nil {
 		return "", time.Time{}, err
 	}
+	s.prune()
 	for existing, request := range s.links {
 		if request.userID == userID {
 			delete(s.links, existing)
 		}
+	}
+	if len(s.links) >= maxPendingLinks {
+		return "", time.Time{}, ErrTooMany
 	}
 	expiresAt := s.now().Add(codeTTL)
 	s.links[code] = linkRequest{userID: userID, loginEpoch: user.LoginEpoch, expiresAt: expiresAt}
@@ -115,7 +119,7 @@ func (s *Service) ConsumeLink(code string, telegramUserID int64) error {
 	return err
 }
 
-func (s *Service) StartLogin(csrf string) (string, time.Time, error) {
+func (s *Service) StartLogin(csrf, ip string) (string, time.Time, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -126,21 +130,56 @@ func (s *Service) StartLogin(csrf string) (string, time.Time, error) {
 	if err := s.db().Model(&model.User{}).Where("telegram_id <> 0").Count(&count).Error; err != nil || count == 0 {
 		return "", time.Time{}, ErrUnavailable
 	}
-	if !s.reserve() {
-		return "", time.Time{}, ErrTooMany
-	}
 	code, err := newCode()
 	if err != nil {
 		return "", time.Time{}, err
 	}
+	s.prune()
 	for existing, request := range s.logins {
 		if request.csrf == csrf {
 			delete(s.logins, existing)
 		}
 	}
+	if len(s.logins) >= maxPendingLogins {
+		oldestCode := ""
+		var oldestExpiry time.Time
+		for existing, request := range s.logins {
+			if request.telegramID == 0 && (oldestCode == "" || request.expiresAt.Before(oldestExpiry)) {
+				oldestCode, oldestExpiry = existing, request.expiresAt
+			}
+		}
+		if oldestCode == "" {
+			return "", time.Time{}, ErrTooMany
+		}
+		delete(s.logins, oldestCode)
+	}
 	expiresAt := s.now().Add(codeTTL)
-	s.logins[code] = loginRequest{csrf: csrf, expiresAt: expiresAt}
+	s.logins[code] = loginRequest{csrf: csrf, ip: ip, expiresAt: expiresAt}
 	return code, expiresAt, nil
+}
+
+// PrepareLogin records who received the approval prompt without approving the browser.
+func (s *Service) PrepareLogin(code string, telegramUserID int64) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	request, ok := s.logins[code]
+	if !ok || telegramUserID <= 0 || !s.now().Before(request.expiresAt) || request.userID != 0 {
+		return "", ErrInvalidCode
+	}
+	if request.telegramID != 0 && request.telegramID != telegramUserID {
+		return "", ErrUnavailable
+	}
+	var count int64
+	if err := s.db().Model(&model.User{}).Where("telegram_id = ?", telegramUserID).Count(&count).Error; err != nil {
+		return "", err
+	}
+	if count != 1 {
+		return "", ErrUnavailable
+	}
+	request.telegramID = telegramUserID
+	s.logins[code] = request
+	return request.ip, nil
 }
 
 func (s *Service) ApproveLogin(code string, telegramUserID int64) error {
@@ -148,7 +187,7 @@ func (s *Service) ApproveLogin(code string, telegramUserID int64) error {
 	defer s.mu.Unlock()
 
 	request, ok := s.logins[code]
-	if !ok || telegramUserID <= 0 || !s.now().Before(request.expiresAt) || request.userID != 0 {
+	if !ok || telegramUserID <= 0 || !s.now().Before(request.expiresAt) || request.userID != 0 || request.telegramID != telegramUserID {
 		return ErrInvalidCode
 	}
 	var users []model.User
@@ -161,6 +200,18 @@ func (s *Service) ApproveLogin(code string, telegramUserID int64) error {
 	request.userID = users[0].Id
 	request.telegramID = telegramUserID
 	s.logins[code] = request
+	return nil
+}
+
+func (s *Service) RejectLogin(code string, telegramUserID int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	request, ok := s.logins[code]
+	if !ok || !s.now().Before(request.expiresAt) || request.userID != 0 || request.telegramID != telegramUserID {
+		return ErrInvalidCode
+	}
+	delete(s.logins, code)
 	return nil
 }
 
@@ -215,7 +266,7 @@ func (s *Service) Unlink(userID int) error {
 	return nil
 }
 
-func (s *Service) reserve() bool {
+func (s *Service) prune() {
 	now := s.now()
 	for code, request := range s.links {
 		if !now.Before(request.expiresAt) {
@@ -227,7 +278,6 @@ func (s *Service) reserve() bool {
 			delete(s.logins, code)
 		}
 	}
-	return len(s.links)+len(s.logins) < maxPending
 }
 
 func newCode() (string, error) {

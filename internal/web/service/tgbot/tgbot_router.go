@@ -338,6 +338,10 @@ func isCommandForBot(text string, username string) bool {
 
 // answerCallback processes callback queries from inline keyboards.
 func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool) {
+	if isTelegramAuthCallback(callbackQuery.Data) {
+		t.telegramAuthCallback(callbackQuery)
+		return
+	}
 	chatId := callbackQuery.Message.GetChat().ID
 
 	// Only an admin's wizard callbacks touch a draft, so only they take its lock:

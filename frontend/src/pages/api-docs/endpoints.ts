@@ -246,18 +246,21 @@ export const sections: readonly Section[] = [
       {
         method: 'GET',
         path: '/telegram-auth/status',
-        summary: 'Return whether Telegram login is available and the bot username for the login page.',
+        summary:
+          'Return whether Telegram login is available and the bot username for the login page.',
       },
       {
         method: 'POST',
         path: '/telegram-auth/start',
-        summary: 'Create a short-lived login code bound to the browser session. Requires the CSRF header.',
+        summary:
+          'Create a short-lived login code bound to the browser session. Requires the CSRF header.',
         response: '{"success":true,"obj":{"code":"...","expiresAt":1736000000000}}',
       },
       {
         method: 'POST',
         path: '/telegram-auth/complete',
-        summary: 'Poll a login code after approval in a private Telegram chat; issues the session cookie once.',
+        summary:
+          'Poll a login code after approval in a private Telegram chat; issues the session cookie once.',
         params: [{ name: 'code', in: 'body', type: 'string', desc: 'Code returned by start.' }],
         response: '{"success":true,"obj":{"pending":false}}',
       },
@@ -1923,19 +1926,33 @@ export const sections: readonly Section[] = [
       {
         method: 'POST',
         path: '/panel/api/setting/telegramAuth/link',
-        summary: 'Create a short-lived account-link code. Requires the current password and TOTP when enabled.',
+        summary:
+          'Create a short-lived account-link code. Requires the current password and TOTP when enabled.',
         params: [
           { name: 'password', in: 'body', type: 'string', desc: 'Current panel password.' },
-          { name: 'twoFactorCode', in: 'body', type: 'string', desc: 'Current TOTP when enabled.', optional: true },
+          {
+            name: 'twoFactorCode',
+            in: 'body',
+            type: 'string',
+            desc: 'Current TOTP when enabled.',
+            optional: true,
+          },
         ],
       },
       {
         method: 'POST',
         path: '/panel/api/setting/telegramAuth/unlink',
-        summary: 'Remove the Telegram login binding and invalidate current panel sessions. Requires the current password and TOTP when enabled.',
+        summary:
+          'Remove the Telegram login binding and invalidate current panel sessions. Requires the current password and TOTP when enabled.',
         params: [
           { name: 'password', in: 'body', type: 'string', desc: 'Current panel password.' },
-          { name: 'twoFactorCode', in: 'body', type: 'string', desc: 'Current TOTP when enabled.', optional: true },
+          {
+            name: 'twoFactorCode',
+            in: 'body',
+            type: 'string',
+            desc: 'Current TOTP when enabled.',
+            optional: true,
+          },
         ],
       },
       {

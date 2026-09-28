@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"net/netip"
 	"text/template"
 	"time"
 
@@ -15,8 +16,10 @@ import (
 
 const telegramAuthError = "Telegram authentication failed"
 
-var telegramAuthStartLimiter = newLoginLimiter(5, 5*time.Minute, 15*time.Minute)
-var telegramAuthCredentialLimiter = newLoginLimiter(5, 5*time.Minute, 15*time.Minute)
+var (
+	telegramAuthStartLimiter      = newLoginLimiter(5, 5*time.Minute, 15*time.Minute)
+	telegramAuthCredentialLimiter = newLoginLimiter(5, 5*time.Minute, 15*time.Minute)
+)
 
 type telegramAuthCodeForm struct {
 	Code string `json:"code" form:"code"`
@@ -35,7 +38,8 @@ func (a *IndexController) telegramAuthStatus(c *gin.Context) {
 
 func (a *IndexController) telegramAuthStart(c *gin.Context) {
 	ip := getRemoteIp(c)
-	if _, ok := telegramAuthStartLimiter.allow(ip, "telegram"); !ok {
+	rateIP := telegramAuthRateLimitIP(ip)
+	if _, ok := telegramAuthStartLimiter.allow(rateIP, "telegram"); !ok {
 		pureJsonMsg(c, http.StatusOK, false, "Too many login requests. Try again later.")
 		return
 	}
@@ -48,12 +52,12 @@ func (a *IndexController) telegramAuthStart(c *gin.Context) {
 		pureJsonMsg(c, http.StatusInternalServerError, false, telegramAuthError)
 		return
 	}
-	code, expiresAt, err := telegramauth.Default.StartLogin(csrf)
+	code, expiresAt, err := telegramauth.Default.StartLogin(csrf, ip)
 	if err != nil {
 		pureJsonMsg(c, http.StatusOK, false, telegramAuthError)
 		return
 	}
-	telegramAuthStartLimiter.registerFailure(ip, "telegram")
+	telegramAuthStartLimiter.registerFailure(rateIP, "telegram")
 	jsonObj(c, gin.H{"code": code, "expiresAt": expiresAt.UnixMilli()}, nil)
 }
 
@@ -82,7 +86,7 @@ func (a *IndexController) telegramAuthComplete(c *gin.Context) {
 		pureJsonMsg(c, http.StatusInternalServerError, false, telegramAuthError)
 		return
 	}
-	telegramAuthStartLimiter.registerSuccess(getRemoteIp(c), "telegram")
+	telegramAuthStartLimiter.registerSuccess(telegramAuthRateLimitIP(getRemoteIp(c)), "telegram")
 	logger.Infof("Telegram login: username=%q, IP=%q", user.Username, getRemoteIp(c))
 	a.tgbot.UserLoginNotify(tgbot.LoginAttempt{
 		Username: template.HTMLEscapeString(user.Username),
@@ -91,6 +95,18 @@ func (a *IndexController) telegramAuthComplete(c *gin.Context) {
 		Status:   tgbot.LoginSuccess,
 	})
 	jsonObj(c, gin.H{"pending": false}, nil)
+}
+
+func telegramAuthRateLimitIP(ip string) string {
+	addr, err := netip.ParseAddr(ip)
+	if err != nil {
+		return ip
+	}
+	addr = addr.Unmap()
+	if addr.Is6() {
+		return netip.PrefixFrom(addr, 64).Masked().String()
+	}
+	return addr.String()
 }
 
 func (a *SettingController) telegramAuthSettingStatus(c *gin.Context) {
