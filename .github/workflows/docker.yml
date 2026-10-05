@@ -10,6 +10,9 @@ on:
     tags:
       - "v*.*.*"
 
+env:
+  DOCKER_BUILD_RECORD_RETENTION_DAYS: 7
+
 jobs:
   build:
     runs-on: ubuntu-latest
