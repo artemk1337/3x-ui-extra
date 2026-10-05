@@ -57,6 +57,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
+          retention-days: 7
           name: mutation-${{ matrix.name }}
           path: mutation-${{ matrix.name }}.json
           if-no-files-found: ignore
